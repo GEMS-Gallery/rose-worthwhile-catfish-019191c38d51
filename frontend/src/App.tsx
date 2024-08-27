@@ -10,7 +10,7 @@ interface Position {
 
 interface GameState {
   playerPosition: Position;
-  housePosition: Position | null;
+  housePosition: Position;
 }
 
 const App: React.FC = () => {
@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const initializeGame = async () => {
     try {
       const initialState = await backend.initializeGame();
-      console.log('Initial game state:', initialState);
+      console.log('Initial game state:', JSON.stringify(initialState));
       setGameState(initialState);
     } catch (error) {
       console.error('Failed to initialize game:', error);
@@ -53,6 +53,8 @@ const App: React.FC = () => {
     if (!canvasRef.current) return;
 
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xCCCCCC);
+
     const aspect = window.innerWidth / window.innerHeight;
     const frustumSize = 20;
     const camera = new THREE.OrthographicCamera(
@@ -67,7 +69,6 @@ const App: React.FC = () => {
 
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0xCCCCCC);
 
     const player = new THREE.Mesh(
       new THREE.CircleGeometry(0.5, 32),
@@ -79,10 +80,10 @@ const App: React.FC = () => {
       new THREE.BoxGeometry(2, 2, 2),
       new THREE.MeshBasicMaterial({ color: 0xF5A623 })
     );
-    house.position.set(5, 5, 0);
     scene.add(house);
 
-    console.log('House position:', house.position);
+    const light = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(light);
 
     sceneRef.current = scene;
     cameraRef.current = camera;
@@ -103,13 +104,11 @@ const App: React.FC = () => {
   const updateGameObjects = () => {
     if (gameState && playerRef.current && houseRef.current) {
       playerRef.current.position.set(gameState.playerPosition.x, gameState.playerPosition.y, 0);
-      if (gameState.housePosition) {
-        houseRef.current.position.set(gameState.housePosition.x, gameState.housePosition.y, 0);
-      }
-      console.log('Updated game objects:', {
-        player: playerRef.current.position,
-        house: houseRef.current.position
-      });
+      houseRef.current.position.set(gameState.housePosition.x, gameState.housePosition.y, 0);
+      console.log('Updated game objects:', JSON.stringify({
+        player: gameState.playerPosition,
+        house: gameState.housePosition
+      }));
     }
   };
 
@@ -136,7 +135,7 @@ const App: React.FC = () => {
 
     try {
       const newState = await backend.movePlayer(direction);
-      console.log('New game state after move:', newState);
+      console.log('New game state after move:', JSON.stringify(newState));
       setGameState(newState);
       checkIfInHouse();
     } catch (error) {
@@ -149,7 +148,7 @@ const App: React.FC = () => {
       const inHouse = await backend.enterHouse();
       console.log('Player in house:', inHouse);
       setIsInHouse(inHouse);
-      if (inHouse) {
+      if (inHouse && !isVideoActive) {
         initializeVideoChat();
       }
     } catch (error) {
@@ -184,7 +183,7 @@ const App: React.FC = () => {
     <Box id="game-container">
       <canvas ref={canvasRef} id="game-canvas" />
       <Box id="video-chat">
-        {/* Video chat will be inserted here by Daily.co */}
+        {isVideoActive ? 'Video chat active' : 'Video chat inactive'}
       </Box>
       {isInHouse && (
         <Button

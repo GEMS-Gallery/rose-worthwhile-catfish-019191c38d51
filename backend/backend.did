@@ -5,7 +5,7 @@ type Position =
  };
 type GameState = 
  record {
-   housePosition: opt Position;
+   housePosition: Position;
    playerPosition: Position;
  };
 service : {

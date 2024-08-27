@@ -2,7 +2,7 @@ export const idlFactory = ({ IDL }) => {
   const Position = IDL.Record({ 'x' : IDL.Float64, 'y' : IDL.Float64 });
   const GameState = IDL.Record({
     'playerPosition' : Position,
-    'housePosition' : IDL.Opt(Position),
+    'housePosition' : Position,
   });
   return IDL.Service({
     'enterHouse' : IDL.Func([], [IDL.Bool], []),

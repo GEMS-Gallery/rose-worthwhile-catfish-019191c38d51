@@ -4,7 +4,7 @@ import type { IDL } from '@dfinity/candid';
 
 export interface GameState {
   'playerPosition' : Position,
-  'housePosition' : [] | [Position],
+  'housePosition' : Position,
 }
 export interface Position { 'x' : number, 'y' : number }
 export interface _SERVICE {
