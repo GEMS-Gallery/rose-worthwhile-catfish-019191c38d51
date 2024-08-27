@@ -1,0 +1,16 @@
+type Position = 
+ record {
+   x: float64;
+   y: float64;
+ };
+type GameState = 
+ record {
+   housePosition: opt Position;
+   playerPosition: Position;
+ };
+service : {
+  enterHouse: () -> (bool);
+  getGameState: () -> (GameState) query;
+  initializeGame: () -> (GameState);
+  movePlayer: (text) -> (GameState);
+}
