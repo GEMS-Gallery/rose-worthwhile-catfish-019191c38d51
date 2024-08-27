@@ -42,6 +42,7 @@ const App: React.FC = () => {
   const initializeGame = async () => {
     try {
       const initialState = await backend.initializeGame();
+      console.log('Initial game state:', initialState);
       setGameState(initialState);
     } catch (error) {
       console.error('Failed to initialize game:', error);
@@ -53,7 +54,7 @@ const App: React.FC = () => {
 
     const scene = new THREE.Scene();
     const aspect = window.innerWidth / window.innerHeight;
-    const frustumSize = 10;
+    const frustumSize = 20;
     const camera = new THREE.OrthographicCamera(
       frustumSize * aspect / -2,
       frustumSize * aspect / 2,
@@ -64,8 +65,9 @@ const App: React.FC = () => {
     );
     camera.position.set(0, 0, 10);
 
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xCCCCCC);
 
     const player = new THREE.Mesh(
       new THREE.CircleGeometry(0.5, 32),
@@ -74,10 +76,13 @@ const App: React.FC = () => {
     scene.add(player);
 
     const house = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.BoxGeometry(2, 2, 2),
       new THREE.MeshBasicMaterial({ color: 0xF5A623 })
     );
+    house.position.set(5, 5, 0);
     scene.add(house);
+
+    console.log('House position:', house.position);
 
     sceneRef.current = scene;
     cameraRef.current = camera;
@@ -101,6 +106,10 @@ const App: React.FC = () => {
       if (gameState.housePosition) {
         houseRef.current.position.set(gameState.housePosition.x, gameState.housePosition.y, 0);
       }
+      console.log('Updated game objects:', {
+        player: playerRef.current.position,
+        house: houseRef.current.position
+      });
     }
   };
 
@@ -127,6 +136,7 @@ const App: React.FC = () => {
 
     try {
       const newState = await backend.movePlayer(direction);
+      console.log('New game state after move:', newState);
       setGameState(newState);
       checkIfInHouse();
     } catch (error) {
@@ -137,6 +147,7 @@ const App: React.FC = () => {
   const checkIfInHouse = async () => {
     try {
       const inHouse = await backend.enterHouse();
+      console.log('Player in house:', inHouse);
       setIsInHouse(inHouse);
       if (inHouse) {
         initializeVideoChat();
@@ -149,10 +160,7 @@ const App: React.FC = () => {
   const initializeVideoChat = () => {
     if (isVideoActive) return;
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@daily-co/daily-js';
-    script.async = true;
-    script.onload = () => {
+    try {
       const callFrame = (window as any).Daily.createFrame({
         iframeStyle: {
           position: 'absolute',
@@ -165,24 +173,24 @@ const App: React.FC = () => {
         },
       });
       callFrame.join({ url: 'https://you.daily.co/hello' });
-    };
-    document.body.appendChild(script);
-    setIsVideoActive(true);
+      console.log('Video chat initialized');
+      setIsVideoActive(true);
+    } catch (error) {
+      console.error('Failed to initialize video chat:', error);
+    }
   };
 
   return (
     <Box id="game-container">
       <canvas ref={canvasRef} id="game-canvas" />
-      {isInHouse && (
-        <Box id="video-chat">
-          {/* Video chat will be inserted here by Daily.co */}
-        </Box>
-      )}
+      <Box id="video-chat">
+        {/* Video chat will be inserted here by Daily.co */}
+      </Box>
       {isInHouse && (
         <Button
           variant="contained"
           color="primary"
-          style={{ position: 'absolute', bottom: '20px', left: '20px' }}
+          style={{ position: 'absolute', bottom: '20px', left: '20px', zIndex: 1000 }}
           onClick={initializeGame}
         >
           Exit House

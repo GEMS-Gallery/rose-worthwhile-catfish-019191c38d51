@@ -5,6 +5,7 @@ import Float "mo:base/Float";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 import Option "mo:base/Option";
+import Debug "mo:base/Debug";
 
 actor {
   // Types
@@ -26,6 +27,7 @@ actor {
       playerPosition = { x = 0.0; y = 0.0 };
       housePosition = ?{ x = 5.0; y = 5.0 };
     };
+    Debug.print("Game initialized: " # debug_show(gameState));
     return gameState;
   };
 
@@ -56,6 +58,7 @@ actor {
       };
     };
 
+    Debug.print("Player moved: " # debug_show(gameState));
     return gameState;
   };
 
@@ -67,6 +70,7 @@ actor {
         let playerPos = gameState.playerPosition;
         if (Float.abs(playerPos.x - housePos.x) < 1.0 and
             Float.abs(playerPos.y - housePos.y) < 1.0) {
+          Debug.print("Player entered house");
           true
         } else {
           false
@@ -77,6 +81,7 @@ actor {
 
   // Get game state
   public query func getGameState() : async GameState {
+    Debug.print("Current game state: " # debug_show(gameState));
     gameState
   };
 };
